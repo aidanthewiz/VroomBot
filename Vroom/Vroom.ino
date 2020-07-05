@@ -1,8 +1,6 @@
+#include <Arduino_LSM6DS3.h>
 #include <ArduinoBLE.h>
 #include <Sabertooth.h>
-#include <SPI.h>
-#include <WiFiNINA.h>
-#include "arduino_secrets.h"
 
 /*
   Sabertooth 2x32 DIP Switches - Baud 9600
@@ -22,27 +20,14 @@
 
 Sabertooth ST(128);
 
-// Defined in arduino_secrets.h
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS;
-int status = WL_IDLE_STATUS;
-
 void setup()
 {
+  Serial.begin(9600);
+  while (!Serial);
+  
   SabertoothSetup();
-  connectToWiFi();
-
-  // if (!BLE.begin()) {
-  //   Serial.println("Starting BLE failed!");
-  //   while (1);
-  // }
-
-  // Serial.println("BLE Central Scan");
-  // BLE.scanForAddress("e4:17:d8:4f:f7:05");
-  // BLEDevice peripheral = BLE.available();
-  // if (peripheral) {
-  //     Serial.println("BLE Connected");
-  // }
+  IMUSetup();
+  BluetoothSetup();
 }
 
 void loop()
@@ -50,31 +35,25 @@ void loop()
 
 }
 
-void connectToWiFi()
-{
-  if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
-    while (1);
-  }
-
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    status = WiFi.begin(ssid, pass);
-
-    delay(10000);
-  }
-
-  Serial.print("Successfully connected to ");
-  Serial.println(ssid);
-}
-
 void SabertoothSetup()
 {
-  SabertoothTXPinSerial.begin(9600);
-  while (!SabertoothTXPinSerial);
-  
   ST.autobaud();
   ST.drive(0);
   ST.turn(0);
+}
+
+void IMUSetup()
+{
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1);
+  }
+}
+
+void BluetoothSetup()
+{
+  if (!BLE.begin()) {
+    Serial.println("Failed to initialize Bluetooth!");
+    while (1);
+  }
 }
